@@ -9,7 +9,7 @@ const ASSETS = [
 // 安装：预缓存核心文件
 self.addEventListener('install', e => {
   e.waitUntil(
-    缓存.打开(CACHE).然后(c => c.addAll(ASSETS))
+    caches.open(CACHE).then(c => c.addAll(ASSETS))
   );
   self.skipWaiting();   // 强制跳过 waiting，立即激活
 });
@@ -17,9 +17,9 @@ self.addEventListener('install', e => {
 // 激活：删除旧缓存 + 立即接管所有页面
 self.addEventListener('activate', e => {
   e.waitUntil(
-    缓存.键().然后(键 =>
+    caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).然后(() => self.clients.claim())   // 立即控制当前页面
+    ).then(() => self.clients.claim())   // 立即控制当前页面
   );
 });
 
@@ -27,13 +27,13 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   // HTML 页面：Network First，保证永远是最新的
-  如果 (req.destination === 'document' || req.url.endsWith('.html')) {
+  if (req.destination === 'document' || req.url.endsWith('.html')) {
     e.respondWith(
-      获取(req).捕获(() => 缓存.匹配(req))
+      fetch(req).catch(() => caches.match(req))
     );
-    返回;
+    return;
   }
-  // 其他资源（JS/CSS/图片等）：缓存优先，离线也能用
+  // 其他资源（JS/CSS/图片等）：Cache First，离线也能用
   e.respondWith(
     caches.match(req).then(r => r || fetch(req))
   );
