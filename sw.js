@@ -1,4 +1,4 @@
-const VER = 'slideshow-v7';
+const VER = 'slideshow-v8';
 const CACHE = 'slideshow-' + VER;
 const ASSETS = [
   './',
@@ -9,7 +9,7 @@ const ASSETS = [
 // 安装：预缓存核心文件
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
+    缓存.打开(CACHE).然后(c => c.addAll(ASSETS))
   );
   self.skipWaiting();   // 强制跳过 waiting，立即激活
 });
@@ -17,9 +17,9 @@ self.addEventListener('install', e => {
 // 激活：删除旧缓存 + 立即接管所有页面
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
+    缓存.键().然后(键 =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())   // 立即控制当前页面
+    ).然后(() => self.clients.claim())   // 立即控制当前页面
   );
 });
 
@@ -27,13 +27,13 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   // HTML 页面：Network First，保证永远是最新的
-  if (req.destination === 'document' || req.url.endsWith('.html')) {
+  如果 (req.destination === 'document' || req.url.endsWith('.html')) {
     e.respondWith(
-      fetch(req).catch(() => caches.match(req))
+      获取(req).捕获(() => 缓存.匹配(req))
     );
-    return;
+    返回;
   }
-  // 其他资源（JS/CSS/图片等）：Cache First，离线也能用
+  // 其他资源（JS/CSS/图片等）：缓存优先，离线也能用
   e.respondWith(
     caches.match(req).then(r => r || fetch(req))
   );
